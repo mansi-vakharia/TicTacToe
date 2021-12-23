@@ -1,214 +1,116 @@
-import React, {useState} from 'react'
-import './TicTacToe.css'
+import React, { useState } from "react";
+import Square from "./Square";
+import EndGame from "./EndGame";
 
-const TicTacToe = () => {
-    const [turn,setTurn] = useState('x');
+const INITIAL = "";
+const X_PLAYER = "X";
+const O_PLAYER = "O";
+const winCombination = [
+  [0, 1, 2],
+  [3, 4, 5],
+  [6, 7, 8],
+  [0, 3, 6],
+  [1, 4, 7],
+  [2, 5, 8],
+  [0, 4, 8],
+  [2, 4, 6],
+];
 
-    const [cells, setCells] = useState(Array(9).fill(''))
+function TicTacToe() {
+  const [grid, setGrid] = useState(Array(9).fill(INITIAL));
+  const [player, setPlayer] = useState(false);
+  const [gameFinished, setGameFinished] = useState(false);
+  const [draw, setDraw] = useState(false);
+  const [winCount, setwinCount] = useState({ X: 0, O: 0 });
 
-    const [winner, setWinner] = useState()
-
-    const checkWinner = (squares) => {
-        let combos = {
-            horizontal:[
-                [0,1,2],
-                [3,4,5],
-                [6,7,8]
-            ],
-            vertical:[
-                [0,3,6],
-                [1,4,7],
-                [2,5,8]
-            ],
-            diagonal:[
-                [0,4,8],
-                [2,4,6]
-            ]
+  function isGameOver() {
+    if (!gameFinished) {
+      //* X win check
+      for (let i = 0; i < 8; i++) {
+        if (
+          grid[winCombination[i][0]] === X_PLAYER &&
+          grid[winCombination[i][1]] === X_PLAYER &&
+          grid[winCombination[i][2]] === X_PLAYER
+        ) {
+          setGameFinished(true);
+          setwinCount({ ...winCount, X: winCount.X + 1 });
+          console.log("X WON");
+          return;
         }
-        for (let combo in combos){
-            combos[combo].forEach((pattern) => {
-                if (
-                    squares[pattern[0]] === '' ||
-                    squares[pattern[1]] === '' ||
-                    squares[pattern[2]] === ''
-                ){
-                    //do nothing
-                }else if (
-                    squares[pattern[0]] === squares[pattern[1]] &&
-                    squares[pattern[1]] === squares[pattern[2]]
-                )
-                {
-                    setWinner(squares[pattern[0]])
-                }
-            })
+      }
+
+      //* O win check
+      for (let i = 0; i < 8; i++) {
+        if (
+          grid[winCombination[i][0]] === O_PLAYER &&
+          grid[winCombination[i][1]] === O_PLAYER &&
+          grid[winCombination[i][2]] === O_PLAYER
+        ) {
+          setGameFinished(true);
+          setwinCount({ ...winCount, O: winCount.O + 1 });
+          console.log("O WON");
+          return;
         }
+      }
+
+      //* Draw game check
+      if (!grid.includes(INITIAL)) {
+        setDraw(true);
+        setGameFinished(true);
+        console.log("DRAW");
+      }
     }
+  }
 
-    const handelClick = (num) => {
-        if (cells[num]!==''){
-            return
+  function restartGame() {
+    setGrid(Array(9).fill(INITIAL));
+    setGameFinished(false);
+    setDraw(false);
+  }
+
+  function clearHistory() {
+    setwinCount({ X: 0, O: 0 });
+    restartGame();
+  }
+
+  isGameOver();
+
+  function handleClick(id) {
+    setGrid(
+      grid.map((item, index) => {
+        if (index === id) {
+          if (player) {
+            return X_PLAYER;
+          } else {
+            return O_PLAYER;
+          }
+        } else {
+          return item;
         }
-        let squares = [...cells]
-        if(turn === 'x'){
-            squares[num] = 'x'
-            setTurn('o')
-        }
-        else{
-            squares[num] = 'o'
-            setTurn('x')
-        }
-        checkWinner(squares)
-        setCells(squares)
-    }
+      })
+    );
+    setPlayer(!player);
+  }
 
-    const handleRestart = () => {
-        setWinner(null)
-        setCells(Array(9).fill(''))
-    }
-
-    const Cell = ({num}) => {
-        return <td onClick={() => handelClick(num)}>{cells[num]}</td>
-    }
-
-    return (
-        <div className='TicTacToe'>
-            <table>
-                Turn: {turn}
-                <tbody>
-                    <tr>
-                        <Cell num={0}/>
-                        <Cell num={1}/>
-                        <Cell num={2}/>
-                    </tr>
-                    <tr>
-                        <Cell num={3}/>
-                        <Cell num={4}/>
-                        <Cell num={5}/>
-                    </tr>
-                    <tr>
-                        <Cell num={6}/>
-                        <Cell num={7}/>
-                        <Cell num={8}/>
-                    </tr>
-                </tbody>
-            </table>
-            {winner && (
-                <>
-                <p>
-                    {winner} is the winner!
-                </p>
-                <button onClick={() => handleRestart()}>Play Again</button>
-                </>
-            )}
-        </div>
-    )
+  return (
+    <div>
+      <span className="win-history">
+        X's WINS: {winCount.X}
+        <br />
+        O's WINS: {winCount.O}
+      </span>
+      {gameFinished && (
+        <EndGame
+          winCount={winCount}
+          restartGame={restartGame}
+          player={player}
+          draw={draw}
+          clearHistory={clearHistory}
+        />
+      )}
+      <Square clickedArray={grid} handleClick={handleClick} />
+    </div>
+  );
 }
 
-export default TicTacToe
-
-// import React, { useState } from 'react';
-// import './TicTacToe.css';
-
-// const TicTacToe = () => {
-// 	const [turn, setTurn] = useState('x');
-// 	const [cells, setCells] = useState(Array(9).fill(''));
-// 	const [winner, setWinner] = useState();
-
-// 	const checkForWinner = (squares) => {
-// 		let combos = {
-// 			across: [
-// 				[0, 1, 2],
-// 				[3, 4, 5],
-// 				[6, 7, 8],
-// 			],
-// 			down: [
-// 				[0, 3, 6],
-// 				[1, 4, 7],
-// 				[2, 5, 8],
-// 			],
-// 			diagnol: [
-// 				[0, 4, 8],
-// 				[2, 4, 6],
-// 			],
-// 		};
-
-// 		for (let combo in combos) {
-// 			combos[combo].forEach((pattern) => {
-// 				if (
-// 					squares[pattern[0]] === '' ||
-// 					squares[pattern[1]] === '' ||
-// 					squares[pattern[2]] === ''
-// 				) {
-// 					// do nothing
-// 				} else if (
-// 					squares[pattern[0]] === squares[pattern[1]] &&
-// 					squares[pattern[1]] === squares[pattern[2]]
-// 				) {
-// 					setWinner(squares[pattern[0]]);
-// 				}
-// 			});
-// 		}
-// 	};
-
-// 	const handleClick = (num) => {
-// 		if (cells[num] !== '') {
-// 			alert('already clicked');
-// 			return;
-// 		}
-
-// 		let squares = [...cells];
-
-// 		if (turn === 'x') {
-// 			squares[num] = 'x';
-// 			setTurn('o');
-// 		} else {
-// 			squares[num] = 'o';
-// 			setTurn('x');
-// 		}
-
-// 		checkForWinner(squares);
-// 		setCells(squares);
-// 	};
-
-// 	const handleRestart = () => {
-// 		setWinner(null);
-// 		setCells(Array(9).fill(''));
-// 	};
-
-// 	const Cell = ({ num }) => {
-// 		return <td onClick={() => handleClick(num)}>{cells[num]}</td>;
-// 	};
-
-// 	return (
-// 		<div className='container'>
-// 			<table>
-// 				Turn: {turn}
-// 				<tbody>
-// 					<tr>
-// 						<Cell num={0} />
-// 						<Cell num={1} />
-// 						<Cell num={2} />
-// 					</tr>
-// 					<tr>
-// 						<Cell num={3} />
-// 						<Cell num={4} />
-// 						<Cell num={5} />
-// 					</tr>
-// 					<tr>
-// 						<Cell num={6} />
-// 						<Cell num={7} />
-// 						<Cell num={8} />
-// 					</tr>
-// 				</tbody>
-// 			</table>
-// 			{winner && (
-// 				<>
-// 					<p>{winner} is the winner!</p>
-// 					<button onClick={() => handleRestart()}>Play Again</button>
-// 				</>
-// 			)}
-// 		</div>
-// 	);
-// };
-
-// export default TicTacToe;
+export default TicTacToe;
